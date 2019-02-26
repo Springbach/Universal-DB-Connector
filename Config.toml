@@ -1,0 +1,9 @@
+app-name = "api"
+version = 1.0
+
+[psql]
+host = "localhost"
+port = "6432"
+user = "postgres"
+password = "postgres"
+dbname = "postgres"
