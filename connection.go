@@ -88,29 +88,5 @@ func (psql *PSQLconnector) connect(conf Config) error {
 		return psql.connect(conf)
 	}
 	log.Println("Postgres is connected ")
-	//return db, nil
 	return nil
 }
-
-/* EXAMPLE:
-type T struct {
-	 A int
-	 B string
-}
-
-t := T{23, "ski"}
-s := reflect.ValueOf(&t).Elem()
-typeOfT := s.Type()
-
-for i := 0; i < s.NumField(); i++ {
-	 f := s.Field(i)
-	 fmt.Printf("%d: %s %s = %v\n", i,
-			 typeOfT.Field(i).Name, f.Type(), f.Interface())
-}
-
-// The output of this program is
-//
-// 0: A int = 23
-// 1: B string = ski
-
-*/
