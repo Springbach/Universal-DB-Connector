@@ -54,12 +54,25 @@ type DB struct {
 //Connection for different dbs
 type Connection interface {
 	connect(Config) error
+	insert(interface{}) error
+	close() error
 }
 
 //Connect to Database
 func (db *DB) Connect(con Connection) error {
 	db.ConPool = con
 	return db.ConPool.connect(db.Config)
+}
+
+//Connect to Database
+func (db *DB) Close() {
+	db.ConPool.close()
+	return
+}
+
+//Insert to DB
+func (db *DB) Insert(data interface{}) error {
+	return db.ConPool.insert(data)
 }
 
 //NewDB is a DB constructor with Config.toml configuration
@@ -71,7 +84,7 @@ func NewDB(dbType string) *DB {
 
 //PSQLconnector - custom realization of db connector
 type PSQLconnector struct {
-	*sql.DB
+	db *sql.DB
 }
 
 func (psql *PSQLconnector) connect(conf Config) error {
@@ -83,10 +96,38 @@ func (psql *PSQLconnector) connect(conf Config) error {
 
 	if err := db.Ping(); err != nil {
 		log.Printf("Error!%v", err)
-		log.Println("Retry Postgres connection in 5 seconds... ")
-		time.Sleep(time.Duration(5) * time.Second)
+		log.Println("Retry Postgres connection in 15 seconds... ")
+		time.Sleep(time.Duration(15) * time.Second)
 		return psql.connect(conf)
 	}
+	psql.db = db
 	log.Println("Postgres is connected ")
+	return nil
+}
+
+func (psql *PSQLconnector) close() error {
+	err := psql.db.Close()
+	if err != nil {
+		return err
+	}
+	log.Println("Closing connection to Postgres... ")
+	return nil
+}
+
+//Model is Data model struct
+type DataModel struct {
+	FirstName  string
+	SecondName string
+}
+
+func (psql *PSQLconnector) insert(data interface{}) error {
+	switch data.(type) {
+	case DataModel:
+		m := data.(DataModel)
+		_, err := psql.db.Exec("INSERT INTO example(FIRSTNAME,SECONDNAME) VALUES($1,$2)", m.FirstName, m.SecondName)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -15,7 +15,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		cmd := exec.Command("docker-compose", "up", "--build")
+		cmd := exec.Command("docker-compose", "up", "--force-recreate")
 		r, err := cmd.StdoutPipe()
 		if err != nil {
 			log.Fatal(err)
@@ -30,11 +30,17 @@ func main() {
 		}
 	}()
 	//wait some time for docker-compose up before DB connection
-	time.Sleep(5 * time.Second)
+	log.Println("Waiting 15 seconds for docker-compose DB start")
+	time.Sleep(15 * time.Second)
 	db := NewDB("psql")
 	err := db.Connect(&PSQLconnector{})
 	if err != nil {
 		log.Fatal(err)
+	}
+	defer db.Close()
+	err = db.Insert(DataModel{"Ivan", "Ivanov"})
+	if err != nil {
+		fmt.Printf("%s\n", err)
 	}
 	wg.Wait()
 
